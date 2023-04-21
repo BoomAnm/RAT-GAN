@@ -220,16 +220,16 @@ class NetD(nn.Module):
             DownBlock(nfc[128], nfc[64]),
             DownBlock(nfc[64], nfc[32]), )
 
-        self.decoder_big = SimpleDecoder(nfc[16], nc)
-        self.decoder_part = SimpleDecoder(nfc[32], nc)
+        self.decoder_big = SimpleDecoder(nfc[4], nc)
+        self.decoder_part = SimpleDecoder(nfc[8], nc)
         self.decoder_small = SimpleDecoder(nfc[32], nc)
 
         self.COND_DNET = D_GET_LOGITS_att(ndf)
 
     def forward(self, x, label, part=None):
         if type(x) is not list:
-            x = [F.interpolate(x, size=self.im_size), F.interpolate(x, size=128)]
-        out1 = self.conv_img(x)
+            x = [F.interpolate(x, size=256), F.interpolate(x, size=128)]
+        out1 = self.conv_img(x[0])
         out2 = self.block0(out1)
         out3 = self.block1(out2)
         out4 = self.block2(out3)
@@ -293,7 +293,7 @@ class SimpleDecoder(nn.Module):
     def __init__(self, nfc_in=64, nc=3):
         super(SimpleDecoder, self).__init__()
 
-        nfc_multi = {4: 16, 8: 8, 16: 4, 32: 2, 64: 2, 128: 1, 256: 0.5, 512: 0.25, 1024: 0.125}
+        nfc_multi = {4: 16, 8: 16, 16: 8, 32: 4, 64: 2, 128: 1, 256: 0.5, 512: 0.25, 1024: 0.125}
         nfc = {}
         for k, v in nfc_multi.items():
             nfc[k] = int(v * 32)

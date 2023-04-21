@@ -4,11 +4,11 @@ import lpips
 from miscc.utils import mkdir_p
 from miscc.config import cfg, cfg_from_file
 
-from datasets import TextDataset
-from datasets import prepare_data
+# from datasets import TextDataset
+# from datasets import prepare_data
 # for flower dataset, please use the fllowing dataset files
-# from datasets_flower import TextDataset
-# from datasets_flower import prepare_data
+from datasat_flower import TextDataset
+from datasat_flower import prepare_data
 from DAMSM import RNN_ENCODER, CustomLSTM
 
 import os
@@ -28,7 +28,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 import torch.backends.cudnn as cudnn
 import torchvision.transforms as transforms
-from model import NetG, NetD
+from model_sdc import NetG, NetD
 import torchvision.utils as vutils
 import torch.nn.functional as F
 
@@ -48,7 +48,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a DAMSM network')
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
-                        default='cfg/bird.yml', type=str)
+                        default='cfg/flower.yml', type=str)
     parser.add_argument('--gpu', dest='gpu_id', type=int, default=0)
     parser.add_argument('--data_dir', dest='data_dir', type=str, default='')
     parser.add_argument('--manualSeed', type=int, help='manual seed')

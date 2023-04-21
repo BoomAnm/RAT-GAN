@@ -3,6 +3,7 @@ import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
 from collections import OrderedDict
+from torch.nn.utils import spectral_norm
 
 
 class SEBlock(nn.Module):
@@ -17,11 +18,20 @@ class SEBlock(nn.Module):
         return feat_big * self.main(feat_small)
 
 
+def conv2d(*args, **kwargs):
+    return spectral_norm(nn.Conv2d(*args, **kwargs))
+
+
+class Swish(nn.Module):
+    def forward(self, feat):
+        return feat * torch.sigmoid(feat)
+
+
 class NetG(nn.Module):
     def __init__(self, ngf=64, nz=100, lstm=None):
         super(NetG, self).__init__()
 
-        nfc_multi = {4: 16, 8: 8, 16: 4, 32: 2, 64: 2, 128: 1, 256: 0.5, 512: 0.25, 1024: 0.125}
+        nfc_multi = {4: 8, 8: 8, 16: 8, 32: 8, 64: 4, 128: 2, 256: 1, 512: 0.25, 1024: 0.125}
         nfc = {}
         for k, v in nfc_multi.items():
             nfc[k] = int(v * ngf)
@@ -232,9 +242,9 @@ class NetD(nn.Module):
         self.block4 = resD(ndf * 16, ndf * 16)  # 4
         self.block5 = resD(ndf * 16, ndf * 16)  # 4
 
-        self.se_2_16 = SEBlock(nfc[512], nfc[64])
-        self.se_4_32 = SEBlock(nfc[256], nfc[32])
-        self.se_8_64 = SEBlock(nfc[128], nfc[16])
+        # self.se_2_16 = SEBlock(nfc[256], nfc[32])
+        self.se_4_32 = SEBlock(nfc[128], nfc[16])
+        self.se_8_64 = SEBlock(nfc[64], nfc[8])
 
         self.COND_DNET = D_GET_LOGITS_att(ndf)
 
@@ -244,13 +254,13 @@ class NetD(nn.Module):
         out_3 = self.block1(out_2)
 
         out_4 = self.block2(out_3)
-        out_4 = self.se_2_16(out_1, out_4)
+        out_4 = self.se_4_32(out_1, out_4)
 
         out_5 = self.block3(out_4)
-        out_5 = self.se_4_32(out_2, out_5)
+        out_5 = self.se_8_64(out_2, out_5)
 
         out_6 = self.block4(out_5)
-        out_6 = self.se_4_32(out_3, out_6)
+        # out_6 = self.se_4_32(out_3, out_6)
 
         return out_6
 
